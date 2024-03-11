@@ -1,4 +1,4 @@
-use crate::get_calibration_sums;
+use crate::get_calibration::get_calibration_sums;
 
 #[test]
 fn day1_1_test1(){
