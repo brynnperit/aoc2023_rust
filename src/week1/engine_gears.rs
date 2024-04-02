@@ -1,5 +1,4 @@
 use std::{
-    cmp::min,
     io::BufRead,
     ops::{Add, Sub},
 };
@@ -11,9 +10,11 @@ pub fn get_all_part_numbers_from_path(path: std::ffi::OsString) -> Vec<i32> {
 pub fn get_all_part_numbers_from_input(input: clio::Input) -> Vec<i32> {
     let mut part_numbers = Vec::new();
     let schematic = get_schematic_from_input(input);
-    for part in &schematic.parts {
-        if schematic.part_has_any_adjacent_symbol(part) {
-            part_numbers.push(part.value.parse::<i32>().unwrap())
+    for part_row in &schematic.parts {
+        for part in part_row {
+            if schematic.part_has_any_adjacent_symbol(part) {
+                part_numbers.push(part.value.parse::<i32>().unwrap())
+            }
         }
     }
     part_numbers
@@ -35,22 +36,23 @@ pub fn get_all_gear_ratios_from_path(path: std::ffi::OsString) -> Vec<i32> {
 pub fn get_all_gear_ratios_from_input(input: clio::Input) -> Vec<i32> {
     let mut gear_ratios = Vec::new();
     let schematic = get_schematic_from_input(input);
-    for symbol in &schematic.symbols {
-        match symbol.value {
-            '*' => match schematic.get_two_adjacent_numbers_for_symbol(symbol) {
-                Some(part_tuple) => gear_ratios.push(part_tuple.0 * part_tuple.1),
-                None => (),
-            },
-            _ => (),
+    for symbol_row in &schematic.symbols {
+        for symbol in symbol_row {
+            match symbol.value {
+                '*' => match schematic.get_two_adjacent_numbers_for_symbol(symbol) {
+                    Some(part_tuple) => gear_ratios.push(part_tuple.0 * part_tuple.1),
+                    None => (),
+                },
+                _ => (),
+            }
         }
     }
     gear_ratios
 }
 
 pub struct EngineSchematic {
-    parts: Vec<ValueAtCoord2D<String>>,
-    symbols: Vec<ValueAtCoord2D<char>>,
-    grid: EngineGrid,
+    parts: Vec<Vec<ValueAtCoord2D<String>>>,
+    symbols: Vec<Vec<ValueAtCoord2D<char>>>,
 }
 
 impl EngineSchematic {
@@ -58,88 +60,40 @@ impl EngineSchematic {
         EngineSchematic {
             parts: Vec::new(),
             symbols: Vec::new(),
-            grid: EngineGrid::new(),
         }
-    }
-
-    fn add_part(&mut self, part_number: String, coord_x: usize, coord_y: usize) {
-        self.parts
-            .push(ValueAtCoord2D::new(part_number, coord_x, coord_y));
-    }
-
-    fn add_symbol(&mut self, symbol: char, coord_x: usize, coord_y: usize) {
-        self.symbols
-            .push(ValueAtCoord2D::new(symbol, coord_x, coord_y))
     }
 
     fn add_from_line(&mut self, line: &str) {
-        let coord_y = self.grid.grid_vec.len();
-        let row = self.get_row_from_line(line);
-        self.add_parts_and_symbols_from_row(&row, coord_y);
-        self.grid.grid_vec.push(row);
-    }
-
-    fn get_row_from_line(&self, line: &str) -> Vec<EngineGridType> {
-        let mut row = Vec::new();
+        let coord_y = self.parts.len();
+        let mut part_row = Vec::new();
+        let mut symbol_row = Vec::new();
+        let mut part_string = String::with_capacity(3);
+        let mut coord_x = 0;
         for character in line.chars() {
             match character {
-                '0'..='9' => row.push(EngineGridType::Part(character)),
-                '.' => row.push(EngineGridType::Empty),
-                _ => row.push(EngineGridType::Symbol(character)),
-            }
-        }
-        row
-    }
-
-    fn add_parts_and_symbols_from_row(&mut self, row: &Vec<EngineGridType>, coord_y: usize) {
-        let mut number_string = String::with_capacity(3);
-        let mut coord_x = 0;
-        for grid_type in row {
-            match grid_type {
-                EngineGridType::Part(part_char) => number_string.push(*part_char),
+                '0'..='9' => part_string.push(character),
                 _ => {
-                    number_string =
-                        self.add_part_if_string_is_non_empty(number_string, coord_x, coord_y);
-                    match grid_type {
-                        EngineGridType::Symbol(symbol) => {
-                            self.add_symbol(*symbol, coord_x, coord_y)
-                        }
-                        _ => (),
+                    part_string = move_part_to_row_if_non_empty(&mut part_row, part_string, coord_x, coord_y);
+                    match character {
+                        '.' => (),
+                        _ => symbol_row.push(ValueAtCoord2D::new(character, coord_x, coord_y)),
                     }
                 }
             }
             coord_x += 1;
         }
-        self.add_part_if_string_is_non_empty(number_string, coord_x, coord_y);
-    }
-
-    fn add_part_if_string_is_non_empty(
-        &mut self,
-        number_string: String,
-        coord_x: usize,
-        coord_y: usize,
-    ) -> String {
-        if !number_string.is_empty() {
-            let string_start_x = coord_x - number_string.len();
-            self.add_part(number_string, string_start_x, coord_y);
-            String::with_capacity(3)
-        } else {
-            number_string
-        }
+        move_part_to_row_if_non_empty(&mut part_row, part_string, coord_x, coord_y);
+        self.parts.push(part_row);
+        self.symbols.push(symbol_row);
     }
 
     fn part_has_any_adjacent_symbol(&self, part: &ValueAtCoord2D<String>) -> bool {
-        let part_string_length = part.value.len();
-        let check_start_x = part.coord.x.checked_sub(1).unwrap_or(0);
-        let check_end_x = part.coord.x + part_string_length;
         for row_index in part.coord.y.checked_sub(1).unwrap_or(0)..=part.coord.y + 1 {
-            match self.grid.grid_vec.get(row_index) {
+            match self.symbols.get(row_index) {
                 Some(row) => {
-                    let check_end_x = min(check_end_x, row.len() - 1);
-                    for check_position in &row[check_start_x..=check_end_x] {
-                        match check_position {
-                            EngineGridType::Symbol(_) => return true,
-                            _ => (),
+                    for symbol in row {
+                        if is_symbol_adjacent_to_part(part, symbol) {
+                            return true;
                         }
                     }
                 }
@@ -165,20 +119,18 @@ impl EngineSchematic {
 
     fn get_adjacent_numbers_for_symbol(
         &self,
-        part: &ValueAtCoord2D<char>,
+        symbol: &ValueAtCoord2D<char>,
         number_limit: usize,
     ) -> Vec<i32> {
         let mut adjacent_numbers = Vec::new();
-        for check_part in &self.parts {
-            if check_part.coord.y.abs_diff(part.coord.y) <= 1 {
-                let start_is_adjacent = check_part.coord.x.abs_diff(part.coord.x) <= 1;
-                let starts_before_and_ends_adjacent_to_or_after = check_part.coord.x < part.coord.x
-                    && check_part.coord.x.add(check_part.value.len() - 1) >= part.coord.x.sub(1);
-
-                if start_is_adjacent || starts_before_and_ends_adjacent_to_or_after {
-                    adjacent_numbers.push(check_part.value.parse::<i32>().unwrap());
-                    if adjacent_numbers.len() >= number_limit {
-                        return adjacent_numbers;
+        for part_row in &self.parts {
+            for check_part in part_row {
+                if check_part.coord.y.abs_diff(symbol.coord.y) <= 1 {
+                    if is_symbol_adjacent_to_part(check_part, symbol) {
+                        adjacent_numbers.push(check_part.value.parse::<i32>().unwrap());
+                        if adjacent_numbers.len() >= number_limit {
+                            return adjacent_numbers;
+                        }
                     }
                 }
             }
@@ -187,22 +139,29 @@ impl EngineSchematic {
     }
 }
 
-enum EngineGridType {
-    Empty,
-    Part(char),
-    Symbol(char),
-}
-
-pub struct EngineGrid {
-    grid_vec: Vec<Vec<EngineGridType>>,
-}
-
-impl EngineGrid {
-    const fn new() -> EngineGrid {
-        EngineGrid {
-            grid_vec: Vec::new(),
-        }
+fn move_part_to_row_if_non_empty(
+    part_row: &mut Vec<ValueAtCoord2D<String>>,
+    part_string: String,
+    coord_x: usize,
+    coord_y: usize,
+) -> String {
+    if !part_string.is_empty() {
+        let string_start_x = coord_x - part_string.len();
+        part_row.push(ValueAtCoord2D::new(part_string, string_start_x, coord_y));
+        String::with_capacity(3)
+    } else {
+        part_string
     }
+}
+
+fn is_symbol_adjacent_to_part(
+    part: &ValueAtCoord2D<String>,
+    symbol: &ValueAtCoord2D<char>,
+) -> bool {
+    let start_is_adjacent = part.coord.x.abs_diff(symbol.coord.x) <= 1;
+    let starts_before_and_ends_adjacent_to_or_after = part.coord.x < symbol.coord.x
+        && part.coord.x.add(part.value.len() - 1) >= symbol.coord.x.sub(1);
+    start_is_adjacent || starts_before_and_ends_adjacent_to_or_after
 }
 
 pub struct ValueAtCoord2D<T> {
