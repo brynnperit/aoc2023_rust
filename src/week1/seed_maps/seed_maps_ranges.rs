@@ -3,58 +3,92 @@ use std::io::BufRead;
 use super::source_target_map::{self, SourceTargetMap};
 
 pub fn get_location_numbers_from_seed_input_as_ranges(input: clio::Input) -> Vec<usize> {
-    let input = std::io::BufReader::new(input);
-    let mut line_iter = input.lines();
-    let seed_line = line_iter.next().unwrap().unwrap();
-    let mut seed_line_iter = seed_line.split_ascii_whitespace();
-    seed_line_iter.next();
     let mut location_numbers = Vec::new();
-    while let Ok(seed_number) = seed_line_iter.next().unwrap_or("").parse::<usize>() {
-        location_numbers.push(seed_number);
-    }
-    let mut seed_ranges = Vec::new();
-    while location_numbers.len() > 1 {
-        let seed_range_length = location_numbers.pop().unwrap();
-        let seed_range_start = location_numbers.pop().unwrap();
-        seed_ranges.push(SeedRange::new(seed_range_start, seed_range_length));
-    }
     let mut map_sets = Vec::new();
-    while let Some(Ok(line)) = line_iter.next() {
-        match line.as_str() {
-            "" => (),
-            _ => map_sets.push(source_target_map::get_maps(&mut line_iter)),
-        }
-    }
-    let mut next_ranges = Vec::with_capacity(seed_ranges.len());
-    let mut skipped_ranges = Vec::with_capacity(seed_ranges.len());
+    
+    parse_input(input, &mut location_numbers, &mut map_sets);
+
+    let seed_ranges = get_seed_ranges(location_numbers, map_sets);
+    seed_ranges
+        .iter()
+        .map(|seed_range| seed_range.range_start)
+        .collect::<Vec<_>>()
+}
+
+fn get_seed_ranges(location_numbers: Vec<usize>, map_sets: Vec<Vec<SourceTargetMap>>) -> Vec<SeedRange> {
+    let mut first_ranges = transform_locations_to_ranges(location_numbers);
+
+    let mut second_ranges = Vec::with_capacity(first_ranges.len());
+    let mut third_ranges = Vec::with_capacity(first_ranges.len());
+    
+    let mut current_ranges_ref = &mut first_ranges;
+    let mut skipped_ranges_ref = &mut second_ranges;
+    let mut next_ranges_ref = &mut third_ranges;
+
     let mut applicable_seed_ranges = Vec::new();
-    for map_set in map_sets.as_slice() {
+    for map_set in map_sets {
         for map in map_set {
-            for seed_range in seed_ranges.drain(..) {
-                match seed_range.split_seed_range(map) {
+            for seed_range in current_ranges_ref.drain(..) {
+                match seed_range.split_seed_range(&map) {
                     Some(mut vector) => applicable_seed_ranges.append(&mut vector),
-                    None => skipped_ranges.push(seed_range),
+                    None => skipped_ranges_ref.push(seed_range),
                 }
             }
             for mut seed_range in applicable_seed_ranges.drain(..) {
                 match map.map_number(seed_range.range_start) {
                     Some(mapped_number) => {
                         seed_range.range_start = mapped_number;
-                        next_ranges.push(seed_range);
+                        next_ranges_ref.push(seed_range);
                     }
-                    _ => skipped_ranges.push(seed_range),
+                    _ => skipped_ranges_ref.push(seed_range),
                 }
             }
-            seed_ranges.append(&mut skipped_ranges);
+            (current_ranges_ref, skipped_ranges_ref) = (skipped_ranges_ref, current_ranges_ref);
         }
-        next_ranges.append(&mut seed_ranges);
-        seed_ranges.clear();
-        seed_ranges.append(&mut next_ranges);
+        next_ranges_ref.append(current_ranges_ref);
+        (next_ranges_ref, current_ranges_ref) = (current_ranges_ref,next_ranges_ref);
+    }
+    if first_ranges.len() > 0{
+        first_ranges
+    }else if second_ranges.len() > 0{
+        second_ranges
+    }else {
+        third_ranges
+    }
+}
+
+fn transform_locations_to_ranges(mut location_numbers: Vec<usize>) -> Vec<SeedRange> {
+    let mut seed_ranges = Vec::new();
+    loop {
+        match location_numbers.pop() {
+            Some(seed_range_length) => match location_numbers.pop() {
+                Some(seed_range_start) => {
+                    seed_ranges.push(SeedRange::new(seed_range_start, seed_range_length))
+                }
+                None => break,
+            },
+            None => break,
+        }
     }
     seed_ranges
-        .iter()
-        .map(|seed_range| seed_range.range_start)
-        .collect::<Vec<_>>()
+}
+
+fn parse_input(input: clio::Input, location_numbers: &mut Vec<usize>, map_sets: &mut Vec<Vec<SourceTargetMap>>) {
+    let input = std::io::BufReader::new(input);
+    let mut line_iter = input.lines();
+    let seed_line = line_iter.next().unwrap().unwrap();
+    let mut seed_line_iter = seed_line.split_ascii_whitespace();
+    seed_line_iter.next();
+    while let Ok(seed_number) = seed_line_iter.next().unwrap_or("").parse::<usize>() {
+        location_numbers.push(seed_number);
+    }
+    
+    while let Some(Ok(line)) = line_iter.next() {
+        match line.as_str() {
+            "" => (),
+            _ => map_sets.push(source_target_map::get_maps(&mut line_iter)),
+        }
+    }
 }
 
 struct SeedRange {
@@ -112,7 +146,7 @@ impl SeedRange {
                     SeedRange::new(map_range_start + map_range_length, leftover_length);
                 return Some(vec![first_range, second_range]);
             } else {
-                return Some(vec![SeedRange::new(self.range_start,self.range_length)]);
+                return Some(vec![SeedRange::new(self.range_start, self.range_length)]);
             }
         }
         None

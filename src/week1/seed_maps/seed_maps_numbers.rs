@@ -1,24 +1,13 @@
 use std::io::BufRead;
 
-use super::source_target_map;
+use super::source_target_map::{self, SourceTargetMap};
 
 pub fn get_location_numbers_from_seed_input(input: clio::Input) -> Vec<usize> {
-    let input = std::io::BufReader::new(input);
-    let mut line_iter = input.lines();
-    let seed_line = line_iter.next().unwrap().unwrap();
-    let mut seed_line_iter = seed_line.split_ascii_whitespace();
-    seed_line_iter.next();
     let mut location_numbers = Vec::new();
-    while let Ok(seed_number) = seed_line_iter.next().unwrap_or("").parse::<usize>() {
-        location_numbers.push(seed_number);
-    }
     let mut map_sets = Vec::new();
-    while let Some(Ok(line)) = line_iter.next() {
-        match line.as_str() {
-            "" => (),
-            _ => map_sets.push(source_target_map::get_maps(&mut line_iter)),
-        }
-    }
+    
+    parse_input(input, &mut location_numbers, &mut map_sets);
+
     for map_set in map_sets.as_slice() {
         for seed_index in 0..location_numbers.len() {
             for map in map_set {
@@ -33,4 +22,22 @@ pub fn get_location_numbers_from_seed_input(input: clio::Input) -> Vec<usize> {
         }
     }
     location_numbers
+}
+
+fn parse_input(input: clio::Input, location_numbers: &mut Vec<usize>, map_sets: &mut Vec<Vec<SourceTargetMap>>) {
+    let input = std::io::BufReader::new(input);
+    let mut line_iter = input.lines();
+    let seed_line = line_iter.next().unwrap().unwrap();
+    let mut seed_line_iter = seed_line.split_ascii_whitespace();
+    seed_line_iter.next();
+    while let Ok(seed_number) = seed_line_iter.next().unwrap_or("").parse::<usize>() {
+        location_numbers.push(seed_number);
+    }
+    
+    while let Some(Ok(line)) = line_iter.next() {
+        match line.as_str() {
+            "" => (),
+            _ => map_sets.push(source_target_map::get_maps(&mut line_iter)),
+        }
+    }
 }
