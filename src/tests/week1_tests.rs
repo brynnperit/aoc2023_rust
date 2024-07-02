@@ -4,3 +4,4 @@ mod day3_tests;
 mod day4_tests;
 mod day5_tests;
 mod day6_tests;
+mod day7_tests;
