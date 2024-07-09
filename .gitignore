@@ -19,7 +19,7 @@ inputs/
 #vscode specific files
 .vscode/
 
-
+.idea/
 # Added by cargo
 
 /target
