@@ -9,7 +9,11 @@ pub struct Coord2D<T: Integer + Copy> {
 }
 
 impl<T: Integer + Copy + CheckedSub + One> Coord2D<T> {
-    pub fn new_row_column(row: T, col: T) -> Self {
+    pub const fn new(x: T, y: T) -> Self {
+        Coord2D { x, y }
+    }
+
+    pub const fn new_row_column(row: T, col: T) -> Self {
         Coord2D { x: col, y: row }
     }
 
@@ -34,11 +38,19 @@ impl<T: Integer + Copy + CheckedSub + One> Coord2D<T> {
         }
     }
 
-    pub fn get_row(&self) -> T {
+    pub const fn get_row(&self) -> T {
         self.y
     }
 
-    pub fn get_col(&self) -> T {
+    pub const fn get_col(&self) -> T {
         self.x
+    }
+
+    pub const fn get_x(&self) -> T {
+        self.x
+    }
+
+    pub const fn get_y(&self) -> T{
+        self.y
     }
 }

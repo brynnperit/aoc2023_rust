@@ -3,6 +3,8 @@ use std::{
     ops::{Add, Sub},
 };
 
+use crate::shared_libs::coord_2_d::Coord2D;
+
 pub fn get_all_part_numbers_from_path(path: std::ffi::OsString) -> Vec<i32> {
     get_all_part_numbers_from_input(clio::Input::new(&path).unwrap())
 }
@@ -88,7 +90,7 @@ impl EngineSchematic {
     }
 
     fn part_has_any_adjacent_symbol(&self, part: &ValueAtCoord2D<String>) -> bool {
-        for row_index in part.coord.y.checked_sub(1).unwrap_or(0)..=part.coord.y + 1 {
+        for row_index in part.coord.get_y().checked_sub(1).unwrap_or(0)..=part.coord.get_y() + 1 {
             match self.symbols.get(row_index) {
                 Some(row) => {
                     for symbol in row {
@@ -125,7 +127,7 @@ impl EngineSchematic {
         let mut adjacent_numbers = Vec::new();
         for part_row in &self.parts {
             for check_part in part_row {
-                if check_part.coord.y.abs_diff(symbol.coord.y) <= 1 {
+                if check_part.coord.get_y().abs_diff(symbol.coord.get_y()) <= 1 {
                     if is_symbol_adjacent_to_part(check_part, symbol) {
                         adjacent_numbers.push(check_part.value.parse::<i32>().unwrap());
                         if adjacent_numbers.len() >= number_limit {
@@ -158,15 +160,15 @@ fn is_symbol_adjacent_to_part(
     part: &ValueAtCoord2D<String>,
     symbol: &ValueAtCoord2D<char>,
 ) -> bool {
-    let start_is_adjacent = part.coord.x.abs_diff(symbol.coord.x) <= 1;
-    let starts_before_and_ends_adjacent_to_or_after = part.coord.x < symbol.coord.x
-        && part.coord.x.add(part.value.len() - 1) >= symbol.coord.x.sub(1);
+    let start_is_adjacent = part.coord.get_x().abs_diff(symbol.coord.get_x()) <= 1;
+    let starts_before_and_ends_adjacent_to_or_after = part.coord.get_x() < symbol.coord.get_x()
+        && part.coord.get_x().add(part.value.len() - 1) >= symbol.coord.get_x().sub(1);
     start_is_adjacent || starts_before_and_ends_adjacent_to_or_after
 }
 
 pub struct ValueAtCoord2D<T> {
     value: T,
-    coord: Coord2D,
+    coord: Coord2D<usize>,
 }
 
 impl<T> ValueAtCoord2D<T> {
@@ -175,16 +177,5 @@ impl<T> ValueAtCoord2D<T> {
             value,
             coord: Coord2D::new(coord_x, coord_y),
         }
-    }
-}
-
-pub struct Coord2D {
-    x: usize,
-    y: usize,
-}
-
-impl Coord2D {
-    const fn new(x: usize, y: usize) -> Coord2D {
-        Coord2D { x, y }
     }
 }
