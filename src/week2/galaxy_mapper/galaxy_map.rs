@@ -15,9 +15,7 @@ impl GalaxyMap {
         let mut col_status = Vec::new();
         let mut row_index = 0;
         for line in string_iter {
-            if row_status.len() < row_index + 1 {
-                row_status.push(SectorStatus::Empty);
-            }
+            row_status.push(SectorStatus::Empty);
             let mut col_index = 0;
             for tile_char in line.chars() {
                 let tile = GalaxyTile::from_char(tile_char).expect(&format!(
@@ -51,48 +49,26 @@ impl GalaxyMap {
         factor: ExpansionFactor,
     ) -> Vec<(Coord2D<usize>, Coord2D<usize>, u64)> {
         let mut all_distances = Vec::new();
-        for first_index in 0..self.galaxies.len() {
-            let first_galaxy = self.galaxies[first_index];
-            for second_index in first_index + 1..self.galaxies.len() {
-                let second_galaxy = self.galaxies[second_index];
+        let mut first_iter = self.galaxies.iter();
+        while let Some(first_galaxy) = first_iter.next() {
+            let mut second_iter = first_iter.clone();
+            while let Some(second_galaxy) = second_iter.next() {
                 all_distances.push((
-                    first_galaxy,
-                    second_galaxy,
-                    self.get_galaxy_distance(
-                        first_index + 1,
-                        &first_galaxy,
-                        second_index + 1,
-                        &second_galaxy,
-                        &factor,
-                    ),
+                    first_galaxy.clone(),
+                    second_galaxy.clone(),
+                    self.get_galaxy_distance(first_galaxy, second_galaxy, &factor),
                 ));
             }
         }
-        // let mut first_iter = self.galaxies.iter();
-        // while let Some(first_galaxy) = first_iter.next() {
-        //     let mut second_iter = first_iter.clone();
-        //     while let Some(second_galaxy) = second_iter.next() {
-        //         all_distances.push((
-        //             first_galaxy.clone(),
-        //             second_galaxy.clone(),
-        //             self.get_galaxy_distance(first_galaxy, second_galaxy, &factor),
-        //         ));
-        //     }
-        // }
         all_distances
     }
 
     fn get_galaxy_distance(
         &self,
-        first_index: usize,
         first: &Coord2D<usize>,
-        second_index: usize,
         second: &Coord2D<usize>,
         factor: &ExpansionFactor,
     ) -> u64 {
-        if first_index == 5 && second_index == 9 {
-            print!("break");
-        }
         let row_distance =
             Self::get_distance(first.get_row(), second.get_row(), &self.row_status, factor);
         let col_distance =
