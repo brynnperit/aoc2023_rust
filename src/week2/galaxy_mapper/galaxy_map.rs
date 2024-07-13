@@ -18,10 +18,8 @@ impl GalaxyMap {
             row_status.push(SectorStatus::Empty);
             let mut col_index = 0;
             for tile_char in line.chars() {
-                let tile = GalaxyTile::from_char(tile_char).expect(&format!(
-                    "The character {} was unexpected in this line: {}",
-                    tile_char, line
-                ));
+                let tile = GalaxyTile::from_char(tile_char).unwrap_or_else(|| panic!("The character {} was unexpected in this line: {}",
+                    tile_char, line));
                 if col_status.len() < col_index + 1 {
                     col_status.push(SectorStatus::Empty);
                 }
@@ -51,11 +49,11 @@ impl GalaxyMap {
         let mut all_distances = Vec::new();
         let mut first_iter = self.galaxies.iter();
         while let Some(first_galaxy) = first_iter.next() {
-            let mut second_iter = first_iter.clone();
-            while let Some(second_galaxy) = second_iter.next() {
+            let second_iter = first_iter.clone();
+            for second_galaxy in second_iter {
                 all_distances.push((
-                    first_galaxy.clone(),
-                    second_galaxy.clone(),
+                    *first_galaxy,
+                    *second_galaxy,
                     self.get_galaxy_distance(first_galaxy, second_galaxy, &factor),
                 ));
             }

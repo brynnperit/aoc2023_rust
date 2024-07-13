@@ -51,7 +51,7 @@ impl CardHandType {
         ranks: &mut Vec<u8>,
         counts: &mut Vec<u8>,
     ) {
-        let mut cards: Vec<Card> = cards.iter().map(|card| card.clone()).collect();
+        let mut cards: Vec<Card> = cards.to_vec();
         match rules {
             CamelCardsRules::Standard => cards.sort_unstable_by_key(Card::get_rank),
             CamelCardsRules::Wildcard => cards.sort_unstable_by_key(|card|std::cmp::Reverse(card.get_rank_wildcard())),

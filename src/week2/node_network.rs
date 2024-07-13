@@ -58,6 +58,6 @@ fn steps_to_navigate_network_in_input_simul(input: clio::Input) -> u64 {
     }
     steps
         .into_iter()
-        .reduce(|first, second| num::integer::lcm(first,second))
+        .reduce(num::integer::lcm)
         .unwrap_or_default()
 }

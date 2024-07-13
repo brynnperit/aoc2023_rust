@@ -27,9 +27,9 @@ impl SourceTargetMap {
         let source_range_start = line_iter.next()?.parse::<usize>().ok()?;
         let range_length = line_iter.next()?.parse::<usize>().ok()?;
         Some(SourceTargetMap {
-            destination_range_start: destination_range_start,
-            source_range_start: source_range_start,
-            range_length: range_length,
+            destination_range_start,
+            source_range_start,
+            range_length,
         })
     }
 

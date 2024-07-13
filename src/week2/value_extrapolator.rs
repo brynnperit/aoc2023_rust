@@ -33,7 +33,7 @@ fn get_extrapolated_value<T: Integer+Copy>(values: Vec<T>) -> T {
     let mut delta_iter = all_deltas.iter().rev();
     delta_iter.next();
     let mut last_value = num::zero();
-    while let Some(current_delta)=delta_iter.next(){
+    for current_delta in delta_iter{
         last_value = last_value + *current_delta.last().unwrap_or(&num::zero());
     }
     last_value
@@ -67,8 +67,8 @@ fn get_values_from_input(input: clio::Input) -> Vec<Vec<i64>> {
     let mut lines = input.lines();
     while let Some(Ok(line)) = lines.next() {
         let mut values = Vec::new();
-        let mut number_strs = line.split_ascii_whitespace();
-        while let Some(number_str) = number_strs.next() {
+        let number_strs = line.split_ascii_whitespace();
+        for number_str in number_strs {
             match number_str.parse::<i64>() {
                 Ok(value) => values.push(value),
                 Err(_) => eprint!("Could not parse this string into an i64: {}", number_str),

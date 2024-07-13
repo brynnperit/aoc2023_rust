@@ -10,11 +10,11 @@ pub struct PipeTileMap {
 }
 
 impl PipeTileMap {
-    pub fn from_iter(mut string_iter: impl Iterator<Item = String>) -> Option<Self> {
+    pub fn from_iter(string_iter: impl Iterator<Item = String>) -> Option<Self> {
         let mut tiles = Vec::new();
         let mut start_found = false;
         let mut start_position = Coord2D::new_row_column(0, 0);
-        while let Some(line) = string_iter.next() {
+        for line in string_iter {
             let mut row = Vec::new();
             for tile_char in line.chars() {
                 let tile = PipeTile::from_char(tile_char);
@@ -50,16 +50,11 @@ impl PipeTileMap {
                 }
             }
         }
-        for possible_tile in PipeTile::NAVIGABLE_PIPES {
-            if Self::check_directions_for_connections(
+        PipeTile::NAVIGABLE_PIPES.into_iter().find(|&possible_tile| Self::check_directions_for_connections(
                 &direction_tiles,
                 &possible_tile,
                 possible_tile.get_2_connecting_directions(),
-            ) {
-                return Some(possible_tile);
-            }
-        }
-        None
+            ))
     }
 
     fn check_directions_for_connections(
@@ -68,8 +63,8 @@ impl PipeTileMap {
         directions: &[Direction],
     ) -> bool {
         for direction in directions {
-            if let Some(direction_tile) = direction_tiles.get(&direction) {
-                if !possible_tile.connects(direction_tile, &direction) {
+            if let Some(direction_tile) = direction_tiles.get(direction) {
+                if !possible_tile.connects(direction_tile, direction) {
                     return false;
                 }
             } else {
@@ -88,7 +83,7 @@ impl PipeTileMap {
         loop {
             current_position = current_position
                 .in_direction(next_direction)
-                .expect(&format!("Could not navigate from {:?}", current_position));
+                .unwrap_or_else(|| panic!("Could not navigate from {:?}", current_position));
             current_tile = self.map.get_ref(current_position).unwrap();
             if current_tile.get_2_connecting_directions()[0] == next_direction.reverse() {
                 next_direction = &current_tile.get_2_connecting_directions()[1];
@@ -156,10 +151,10 @@ impl PipeTileMap {
 
     fn enlarge(map: &GridMap<PipeTile>) -> GridMap<PipeTile> {
         let mut enlarged_map = Vec::new();
-        let mut rows_iter = map.rows_iter();
-        while let Some(mut col_iter) = rows_iter.next() {
+        let rows_iter = map.rows_iter();
+        for mut col_iter in rows_iter {
             let mut current_rows = vec![Vec::new(), Vec::new(), Vec::new()];
-            while let Some(tile) = col_iter.next() {
+            for tile in col_iter.by_ref() {
                 tile.append_enlarged_tile(&mut current_rows);
             }
             enlarged_map.append(&mut current_rows);

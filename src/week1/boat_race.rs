@@ -77,9 +77,9 @@ struct BoatRace {
 
 impl BoatRace {
     fn new(race_time: u64, record_distance: u64) -> Self {
-        return BoatRace {
+        BoatRace {
             race_time,
             record_distance,
-        };
+        }
     }
 }

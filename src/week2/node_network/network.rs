@@ -62,7 +62,7 @@ impl Network {
         Network { nodes }
     }
 
-    pub fn all_node_names<'a>(&'a self) -> impl Iterator<Item = &'a str> {
+    pub fn all_node_names(&self) -> impl Iterator<Item = &'_ str> {
         self.nodes.iter().map(|pair| pair.0.as_str())
     }
 

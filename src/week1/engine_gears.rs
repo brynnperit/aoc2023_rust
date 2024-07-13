@@ -90,7 +90,7 @@ impl EngineSchematic {
     }
 
     fn part_has_any_adjacent_symbol(&self, part: &ValueAtCoord2D<String>) -> bool {
-        for row_index in part.coord.get_y().checked_sub(1).unwrap_or(0)..=part.coord.get_y() + 1 {
+        for row_index in part.coord.get_y().saturating_sub(1)..=part.coord.get_y() + 1 {
             match self.symbols.get(row_index) {
                 Some(row) => {
                     for symbol in row {
@@ -112,7 +112,7 @@ impl EngineSchematic {
         let adjacent_numbers = self.get_adjacent_numbers_for_symbol(part, 2);
         if adjacent_numbers.len() == 2 {
             return Some((
-                *adjacent_numbers.get(0).unwrap(),
+                *adjacent_numbers.first().unwrap(),
                 *adjacent_numbers.get(1).unwrap(),
             ));
         }
@@ -127,12 +127,10 @@ impl EngineSchematic {
         let mut adjacent_numbers = Vec::new();
         for part_row in &self.parts {
             for check_part in part_row {
-                if check_part.coord.get_y().abs_diff(symbol.coord.get_y()) <= 1 {
-                    if is_symbol_adjacent_to_part(check_part, symbol) {
-                        adjacent_numbers.push(check_part.value.parse::<i32>().unwrap());
-                        if adjacent_numbers.len() >= number_limit {
-                            return adjacent_numbers;
-                        }
+                if check_part.coord.get_y().abs_diff(symbol.coord.get_y()) <= 1 && is_symbol_adjacent_to_part(check_part, symbol) {
+                    adjacent_numbers.push(check_part.value.parse::<i32>().unwrap());
+                    if adjacent_numbers.len() >= number_limit {
+                        return adjacent_numbers;
                     }
                 }
             }

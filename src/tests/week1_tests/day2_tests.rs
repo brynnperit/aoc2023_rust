@@ -12,10 +12,10 @@ fn day2_1_final(){
 
 #[test]
 fn day2_2_test1(){
-    assert_eq!(2286, get_all_minimum_dice_sets_from_path("inputs/week1/input_021_test".into()).iter().map(|dice|get_power_of_dice_set(dice)).sum());
+    assert_eq!(2286, get_all_minimum_dice_sets_from_path("inputs/week1/input_021_test".into()).iter().map(get_power_of_dice_set).sum());
 }
 
 #[test]
 fn day2_2_final(){
-    assert_eq!(72596, get_all_minimum_dice_sets_from_path("inputs/week1/input_02".into()).iter().map(|dice|get_power_of_dice_set(dice)).sum());
+    assert_eq!(72596, get_all_minimum_dice_sets_from_path("inputs/week1/input_02".into()).iter().map(get_power_of_dice_set).sum());
 }

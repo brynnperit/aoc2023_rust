@@ -10,7 +10,7 @@ impl<T> GridMap<T> {
     }
 
     pub fn get_ref(&self, coord: Coord2D<usize>) -> Option<&T> {
-        Some(self.tiles.get(coord.get_row())?.get(coord.get_col())?)
+        self.tiles.get(coord.get_row())?.get(coord.get_col())
     }
 
     pub fn set(&mut self, coord: &Coord2D<usize>, tile: T) {
@@ -26,7 +26,7 @@ impl<T> GridMap<T> {
     }
 
     pub fn col_count(&self) -> usize {
-        if let Some(first_row) = self.tiles.get(0) {
+        if let Some(first_row) = self.tiles.first() {
             return first_row.len();
         }
         0

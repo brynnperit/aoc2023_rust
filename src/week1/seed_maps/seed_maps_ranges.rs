@@ -48,9 +48,9 @@ fn get_seed_ranges(location_numbers: Vec<usize>, map_sets: Vec<Vec<SourceTargetM
         next_ranges_ref.append(current_ranges_ref);
         (next_ranges_ref, current_ranges_ref) = (current_ranges_ref,next_ranges_ref);
     }
-    if first_ranges.len() > 0{
+    if !first_ranges.is_empty(){
         first_ranges
-    }else if second_ranges.len() > 0{
+    }else if !second_ranges.is_empty(){
         second_ranges
     }else {
         third_ranges

@@ -7,8 +7,8 @@ use std::{
 
 pub fn get_calibration_sums_from_path(path: std::ffi::OsString, use_words_for_digits: bool) -> i32 {
     let input = clio::Input::new(&path).unwrap();
-    let calibration_sum = get_calibration_sums(input, use_words_for_digits);
-    calibration_sum
+    
+    get_calibration_sums(input, use_words_for_digits)
 }
 
 pub fn get_calibration_sums(input: clio::Input, use_words_for_digits: bool) -> i32 {
@@ -40,8 +40,8 @@ pub fn get_calibration_value(line: &str, use_words_for_digits: bool) -> i32 {
         regex_match = digit_regex.find(remaining_line);
     }
 
-    let calibration_value = (start_digit * 10) + end_digit;
-    calibration_value
+    
+    (start_digit * 10) + end_digit
 }
 
 static DIGIT_WORDS: Lazy<HashMap<&str, i32>> = Lazy::new(|| {

@@ -93,8 +93,8 @@ impl ScratchCard {
             contained_numbers.push(contained_number);
         }
         Some(ScratchCard {
-            winning_numbers: winning_numbers,
-            contained_numbers: contained_numbers,
+            winning_numbers,
+            contained_numbers,
         })
     }
 }
