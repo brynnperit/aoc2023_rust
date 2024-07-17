@@ -69,10 +69,7 @@ impl PipeTile {
             }
         }
         match self {
-            PipeTile::Ground => match other_tile {
-                PipeTile::Ground => true,
-                _ => false,
-            },
+            PipeTile::Ground => matches!(other_tile,PipeTile::Ground),
             _ => match other_tile {
                 PipeTile::Ground => false,
                 _ => other_tile
@@ -82,7 +79,7 @@ impl PipeTile {
         }
     }
 
-    pub fn append_enlarged_tile(&self, target: &mut Vec<Vec<PipeTile>>) {
+    pub fn append_enlarged_tile(&self, target: &mut [Vec<PipeTile>]) {
         target[0].push(Self::Ground);
         match self {
             PipeTile::Horizontal | PipeTile::NorthWest | PipeTile::SouthWest => {

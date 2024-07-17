@@ -40,12 +40,10 @@ pub fn get_all_gear_ratios_from_input(input: clio::Input) -> Vec<i32> {
     let schematic = get_schematic_from_input(input);
     for symbol_row in &schematic.symbols {
         for symbol in symbol_row {
-            match symbol.value {
-                '*' => match schematic.get_two_adjacent_numbers_for_symbol(symbol) {
-                    Some(part_tuple) => gear_ratios.push(part_tuple.0 * part_tuple.1),
-                    None => (),
-                },
-                _ => (),
+            if symbol.value == '*'{
+                if let Some(part_tuple) = schematic.get_two_adjacent_numbers_for_symbol(symbol) {
+                    gear_ratios.push(part_tuple.0 * part_tuple.1);
+                }
             }
         }
     }
@@ -75,7 +73,8 @@ impl EngineSchematic {
             match character {
                 '0'..='9' => part_string.push(character),
                 _ => {
-                    part_string = move_part_to_row_if_non_empty(&mut part_row, part_string, coord_x, coord_y);
+                    part_string =
+                        move_part_to_row_if_non_empty(&mut part_row, part_string, coord_x, coord_y);
                     match character {
                         '.' => (),
                         _ => symbol_row.push(ValueAtCoord2D::new(character, coord_x, coord_y)),
@@ -91,15 +90,12 @@ impl EngineSchematic {
 
     fn part_has_any_adjacent_symbol(&self, part: &ValueAtCoord2D<String>) -> bool {
         for row_index in part.coord.get_y().saturating_sub(1)..=part.coord.get_y() + 1 {
-            match self.symbols.get(row_index) {
-                Some(row) => {
-                    for symbol in row {
-                        if is_symbol_adjacent_to_part(part, symbol) {
-                            return true;
-                        }
+            if let Some(row) = self.symbols.get(row_index) {
+                for symbol in row {
+                    if is_symbol_adjacent_to_part(part, symbol) {
+                        return true;
                     }
                 }
-                None => (),
             }
         }
         false
@@ -127,7 +123,9 @@ impl EngineSchematic {
         let mut adjacent_numbers = Vec::new();
         for part_row in &self.parts {
             for check_part in part_row {
-                if check_part.coord.get_y().abs_diff(symbol.coord.get_y()) <= 1 && is_symbol_adjacent_to_part(check_part, symbol) {
+                if check_part.coord.get_y().abs_diff(symbol.coord.get_y()) <= 1
+                    && is_symbol_adjacent_to_part(check_part, symbol)
+                {
                     adjacent_numbers.push(check_part.value.parse::<i32>().unwrap());
                     if adjacent_numbers.len() >= number_limit {
                         return adjacent_numbers;

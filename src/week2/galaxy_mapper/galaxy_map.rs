@@ -13,11 +13,9 @@ impl GalaxyMap {
         let mut galaxies = Vec::new();
         let mut row_status = Vec::new();
         let mut col_status = Vec::new();
-        let mut row_index = 0;
-        for line in string_iter {
+        for (row_index,line) in string_iter.enumerate() {
             row_status.push(SectorStatus::Empty);
-            let mut col_index = 0;
-            for tile_char in line.chars() {
+            for (col_index,tile_char) in line.chars().enumerate() {
                 let tile = GalaxyTile::from_char(tile_char).unwrap_or_else(|| panic!("The character {} was unexpected in this line: {}",
                     tile_char, line));
                 if col_status.len() < col_index + 1 {
@@ -31,9 +29,7 @@ impl GalaxyMap {
                     }
                     GalaxyTile::Space => (),
                 }
-                col_index += 1;
             }
-            row_index += 1;
         }
         GalaxyMap {
             galaxies,
@@ -77,7 +73,7 @@ impl GalaxyMap {
     fn get_distance(
         first_index: usize,
         second_index: usize,
-        status_vector: &Vec<SectorStatus>,
+        status_vector: &[SectorStatus],
         factor: &ExpansionFactor,
     ) -> u64 {
         let mut distance: u64 = first_index.abs_diff(second_index).try_into().unwrap();

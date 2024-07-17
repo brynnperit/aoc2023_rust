@@ -11,13 +11,10 @@ pub fn get_total_card_count_from_path(path: std::ffi::OsString) -> usize {
 pub fn get_all_card_winnings_from_input(input: clio::Input) -> Vec<u32> {
     let mut card_winnings = Vec::new();
     let input = std::io::BufReader::new(input);
-    for line in input.lines() {
-        match line {
-            Ok(line) => match ScratchCard::from_str(&line) {
+    for line in input.lines().map_while(Result::ok) {
+        match ScratchCard::from_str(&line) {
                 Some(card) => card_winnings.push(card.get_winnings()),
                 None => panic!("This line was not formatted properly: {}", line),
-            },
-            _ => (),
         }
     }
     card_winnings
@@ -27,13 +24,10 @@ pub fn get_total_card_count_from_input(input: clio::Input) -> usize {
     let mut total_count = 0;
     let input = std::io::BufReader::new(input);
     let mut all_cards = Vec::new();
-    for line in input.lines() {
-        match line {
-            Ok(line) => match ScratchCard::from_str(&line) {
-                Some(card) => all_cards.push(card),
-                None => panic!("This line was not formatted properly: {}", line),
-            },
-            _ => (),
+    for line in input.lines().map_while(Result::ok) {
+        match ScratchCard::from_str(&line) {
+            Some(card) => all_cards.push(card),
+            None => panic!("This line was not formatted properly: {}", line),
         }
     }
     let mut all_card_winning_numbers = Vec::new();
@@ -46,8 +40,12 @@ pub fn get_total_card_count_from_input(input: clio::Input) -> usize {
         let win_count = all_card_winning_numbers[card_index];
         let card_count = card_counts[card_index];
         total_count += card_count;
-        for won_card_index in card_index + 1..(card_index + win_count + 1) {
-            card_counts[won_card_index] += card_count;
+        for won_cards in card_counts
+            .iter_mut()
+            .take(card_index + win_count + 1)
+            .skip(card_index + 1)
+        {
+            *won_cards += card_count;
         }
     }
     total_count

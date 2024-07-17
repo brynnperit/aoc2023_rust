@@ -36,9 +36,8 @@ pub fn get_all_valid_game_ids_from_input(input: clio::Input) -> Vec<i32> {
     let mut game_ids = Vec::new();
     let input = std::io::BufReader::new(input);
     for line in input.lines().map(|line| line.unwrap()) {
-        match get_id_of_valid_game_from_string(&line, DEFAULT_GAME_DICE_LIMITS) {
-            Some(id) => game_ids.push(id),
-            None => (),
+        if let Some(id) = get_id_of_valid_game_from_string(&line, DEFAULT_GAME_DICE_LIMITS) {
+            game_ids.push(id);
         }
     }
     game_ids

@@ -1,10 +1,10 @@
 use camel_cards_rules::CamelCardsRules;
 use card_hand::CardHand;
 
+mod camel_cards_rules;
+mod card;
 mod card_hand;
 mod card_hand_type;
-mod card;
-mod camel_cards_rules;
 
 pub fn get_winnings_from_file(path: std::ffi::OsString) -> Vec<u64> {
     get_winnings_from_input(clio::Input::new(&path).unwrap(), CamelCardsRules::Standard)
@@ -29,13 +29,9 @@ fn get_winnings_from_input(input: clio::Input, rules: CamelCardsRules) -> Vec<u6
 fn get_card_hands_from_input(input: clio::Input, rules: CamelCardsRules) -> Vec<CardHand> {
     let mut hands = Vec::new();
     let input = std::io::BufReader::new(input);
-    for line in std::io::BufRead::lines(input) {
-        match line {
-            Ok(line) => match CardHand::from_str(&line, rules) {
-                Some(card) => hands.push(card),
-                None => (),
-            },
-            Err(_) => (),
+    for line in std::io::BufRead::lines(input).map_while(Result::ok) {
+        if let Some(card) = CardHand::from_str(&line, rules) {
+            hands.push(card);
         }
     }
     hands
