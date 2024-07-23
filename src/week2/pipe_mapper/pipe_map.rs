@@ -44,8 +44,8 @@ impl PipeTileMap {
     ) -> Option<PipeTile> {
         let mut direction_tiles = HashMap::new();
         for direction in Direction::CARDINAL_DIRECTIONS {
-            if let Some(new_coord) = start_position.in_direction(&direction) {
-                if let Some(tile) = tiles.get_ref(new_coord) {
+            if let Some(new_coord) = start_position.new_in_direction(&direction) {
+                if let Some(tile) = tiles.get_ref(&new_coord) {
                     direction_tiles.insert(direction, tile);
                 }
             }
@@ -78,13 +78,13 @@ impl PipeTileMap {
         let mut pipe_coords = Vec::new();
         let mut current_position = self.start_position;
         pipe_coords.push(current_position);
-        let mut current_tile = self.map.get_ref(self.start_position).unwrap();
+        let mut current_tile = self.map.get_ref(&self.start_position).unwrap();
         let mut next_direction = &current_tile.get_2_connecting_directions()[0];
         loop {
-            current_position = current_position
+            current_position
                 .in_direction(next_direction)
                 .unwrap_or_else(|| panic!("Could not navigate from {:?}", current_position));
-            current_tile = self.map.get_ref(current_position).unwrap();
+            current_tile = self.map.get_ref(&current_position).unwrap();
             if current_tile.get_2_connecting_directions()[0] == next_direction.reverse() {
                 next_direction = &current_tile.get_2_connecting_directions()[1];
             } else {
@@ -113,7 +113,7 @@ impl PipeTileMap {
         let mut new_map = GridMap::new(tiles);
         let main_loop_coords = self.get_pipe_loop_coords_from_start();
         for coord in main_loop_coords {
-            new_map.set(&coord, *self.map.get_ref(coord).unwrap());
+            new_map.set(&coord, *self.map.get_ref(&coord).unwrap());
         }
         new_map
     }
@@ -129,14 +129,14 @@ impl PipeTileMap {
         for row in 0..rows {
             for col in 0..cols {
                 if *main_loop_only_tile_map
-                    .get_ref(Coord2D::new_row_column(row, col))
+                    .get_ref(&Coord2D::new_row_column(row, col))
                     .unwrap()
                     == PipeTile::Ground
                 {
                     let translated_row = 1 + row * 3;
                     let translated_col = 1 + col * 3;
                     if *enlarged_tile_map
-                        .get_ref(Coord2D::new_row_column(translated_row, translated_col))
+                        .get_ref(&Coord2D::new_row_column(translated_row, translated_col))
                         .unwrap()
                         == PipeTile::Ground
                     {
@@ -175,13 +175,13 @@ impl PipeTileMap {
             tiles_to_check.push(Coord2D::new_row_column(row, col_count - 1));
         }
         while let Some(coord_to_check) = tiles_to_check.pop() {
-            let current_tile = enlarged_tile_map.get_ref(coord_to_check).unwrap();
+            let current_tile = enlarged_tile_map.get_ref(&coord_to_check).unwrap();
             if *current_tile == PipeTile::Ground {
                 enlarged_tile_map.set(&coord_to_check, PipeTile::StartPosition);
                 for direction in Direction::CARDINAL_DIRECTIONS {
-                    if let Some(coord_in_direction) = coord_to_check.in_direction(&direction) {
+                    if let Some(coord_in_direction) = coord_to_check.new_in_direction(&direction) {
                         if let Some(tile_in_direction) =
-                            enlarged_tile_map.get_ref(coord_in_direction)
+                            enlarged_tile_map.get_ref(&coord_in_direction)
                         {
                             if *tile_in_direction == PipeTile::Ground {
                                 tiles_to_check.push(coord_in_direction);

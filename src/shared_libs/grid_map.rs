@@ -9,7 +9,7 @@ impl<T> GridMap<T> {
         GridMap { tiles }
     }
 
-    pub fn get_ref(&self, coord: Coord2D<usize>) -> Option<&T> {
+    pub fn get_ref(&self, coord: &Coord2D<usize>) -> Option<&T> {
         self.tiles.get(coord.get_row())?.get(coord.get_col())
     }
 

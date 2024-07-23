@@ -17,7 +17,17 @@ impl<T: Integer + Copy + CheckedSub + One> Coord2D<T> {
         Coord2D { x: col, y: row }
     }
 
-    pub fn in_direction(&self, direction: &Direction) -> Option<Self> {
+    pub fn in_direction(&mut self, direction: &Direction) -> Option<Self> {
+        match direction {
+            Direction::North => self.y= self.y.checked_sub(&num::one())?,
+            Direction::East => self.x= self.x.add(num::one()),
+            Direction::South => self.y= self.y.add(num::one()),
+            Direction::West => self.x=self.x.checked_sub(&num::one())?,
+        }
+        Some(*self)
+    }
+
+    pub fn new_in_direction(&self, direction: &Direction) -> Option<Self> {
         match direction {
             Direction::North => Some(Self {
                 x: self.x,
