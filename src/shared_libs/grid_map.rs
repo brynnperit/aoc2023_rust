@@ -21,6 +21,10 @@ impl<T> GridMap<T> {
         self.tiles.iter().map(|row| row.iter())
     }
 
+    pub fn cols_iter(&self)->impl Iterator<Item = impl Iterator<Item = &T>> {
+        ColumnsIterator::new(self)
+    }
+
     pub fn row_count(&self) -> usize {
         self.tiles.len()
     }
@@ -39,6 +43,53 @@ impl<T: Eq> GridMap<T> {
             if let Some(col) = self.tiles[row].iter().position(|item| *item == to_find) {
                 return Some(Coord2D::new_row_column(row, col));
             }
+        }
+        None
+    }
+}
+
+struct ColumnsIterator<'a, T>{
+    col:usize,
+    map:&'a GridMap<T>,
+}
+
+impl<'a,T> ColumnsIterator<'a,T>{
+    fn new(map:&'a GridMap<T>)->Self{
+        ColumnsIterator{col:0,map}
+    }
+}
+
+impl<'a,T> Iterator for ColumnsIterator<'a,T>{
+    type Item = ColumnIterator<'a,T>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.col+=1;
+        if self.col<= self.map.col_count(){
+            return Some(ColumnIterator::new(self.col,self.map));
+        }
+        None
+    }
+}
+
+struct ColumnIterator<'a,T>{
+    col:usize,
+    row:usize,
+    map:&'a GridMap<T>,
+}
+
+impl<'a,T> ColumnIterator<'a,T>{
+    fn new(col:usize,map:&'a GridMap<T>)->Self{
+        ColumnIterator { col, row: 0, map }
+    }
+}
+
+impl<'a,T> Iterator for ColumnIterator<'a,T>{
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.row+=1;
+        if self.row<= self.map.row_count(){
+            return Some(&self.map.tiles[self.row-1][self.col-1]);
         }
         None
     }
