@@ -19,10 +19,10 @@ impl<T: Integer + Copy + CheckedSub + One> Coord2D<T> {
 
     pub fn in_direction(&mut self, direction: &Direction) -> Option<Self> {
         match direction {
-            Direction::North => self.y= self.y.checked_sub(&num::one())?,
-            Direction::East => self.x= self.x.add(num::one()),
-            Direction::South => self.y= self.y.add(num::one()),
-            Direction::West => self.x=self.x.checked_sub(&num::one())?,
+            Direction::North => self.y = self.y.checked_sub(&num::one())?,
+            Direction::East => self.x = self.x.add(num::one()),
+            Direction::South => self.y = self.y.add(num::one()),
+            Direction::West => self.x = self.x.checked_sub(&num::one())?,
         }
         Some(*self)
     }
@@ -60,7 +60,7 @@ impl<T: Integer + Copy + CheckedSub + One> Coord2D<T> {
         self.x
     }
 
-    pub const fn get_y(&self) -> T{
+    pub const fn get_y(&self) -> T {
         self.y
     }
 }
