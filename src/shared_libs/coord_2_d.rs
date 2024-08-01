@@ -2,7 +2,7 @@ use num::{CheckedSub, Integer, One};
 
 use super::direction::Direction;
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, PartialOrd, Ord)]
 pub struct Coord2D<T: Integer + Copy> {
     x: T,
     y: T,
