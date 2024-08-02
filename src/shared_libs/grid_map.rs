@@ -5,6 +5,14 @@ pub struct GridMap<T> {
     tiles: Vec<Vec<T>>,
 }
 
+impl<T: Clone> Clone for GridMap<T> {
+    fn clone(&self) -> Self {
+        Self {
+            tiles: self.tiles.clone(),
+        }
+    }
+}
+
 impl<T> GridMap<T> {
     pub fn new(tiles: Vec<Vec<T>>) -> Self {
         GridMap { tiles }
