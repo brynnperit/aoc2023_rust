@@ -4,7 +4,11 @@ use std::{
     io::BufRead,
 };
 
+use crucible_path::{CruciblePath, CruciblePathStep};
+
 use crate::shared_libs::{coord_2_d::Coord2D, direction::Direction, grid_map::GridMap};
+
+mod crucible_path;
 
 pub struct CrucibleGrid {
     map: GridMap<u32>,
@@ -34,22 +38,22 @@ impl CrucibleGrid {
             Coord2D::new_row_column(self.map.row_count() - 1, self.map.col_count() - 1);
         let first_steps = get_first_steps(start_position, end_position, minimum_consecutive);
         for step in first_steps.clone() {
-            lowest_cost_steps.insert(step.0.previous_step.clone(), 0);
+            lowest_cost_steps.insert(step.0.get_previous_step().clone(), 0);
         }
         remaining_paths.extend(first_steps);
         let mut shortest_complete_path: Option<CruciblePath> = None;
         while !remaining_paths.is_empty() {
             let shortest_path = remaining_paths.pop().unwrap().0;
             if shortest_complete_path.is_none()
-                || shortest_complete_path.as_ref().unwrap().elapsed_cost
+                || shortest_complete_path.as_ref().unwrap().get_elapsed_cost()
                     > shortest_path.estimated_minimum_cost(1)
             {
-                let previous_step = &shortest_path.previous_step;
-                if previous_step.position == end_position {
+                let previous_step = &shortest_path.get_previous_step();
+                if previous_step.get_position() == end_position {
                     shortest_complete_path = Some(shortest_path);
                 } else {
-                    let consecutive_steps = previous_step.previous_consecutive_steps + 1;
-                    let previous_direction = &previous_step.direction;
+                    let consecutive_steps = previous_step.get_previous_consecutive_steps() + 1;
+                    let previous_direction = &previous_step.get_direction();
                     let next_directions = get_next_directions(
                         consecutive_steps,
                         minimum_consecutive,
@@ -81,7 +85,7 @@ impl CrucibleGrid {
     ) -> Vec<Reverse<CruciblePath>> {
         let mut next_paths = Vec::new();
         for direction in next_directions {
-            if let Some(next_position) = previous_step.position.new_in_direction(&direction) {
+            if let Some(next_position) = previous_step.get_position().new_in_direction(&direction) {
                 if let Some(next_step_cost) = self.map.get_ref(&next_position) {
                     let next_step = if direction == *previous_direction {
                         CruciblePathStep::new(next_position, direction, consecutive_steps)
@@ -89,7 +93,8 @@ impl CrucibleGrid {
                         CruciblePathStep::new(next_position, direction, 0)
                     };
                     let lowest_cost = lowest_cost_steps.get(&next_step).unwrap_or(&u64::MAX);
-                    let new_elapsed_cost = shortest_path.elapsed_cost + u64::from(*next_step_cost);
+                    let new_elapsed_cost =
+                        shortest_path.get_elapsed_cost() + u64::from(*next_step_cost);
                     if new_elapsed_cost < *lowest_cost {
                         lowest_cost_steps.insert(next_step.clone(), new_elapsed_cost);
                         let mut new_path = shortest_path.clone();
@@ -137,94 +142,4 @@ fn get_next_directions(
         },
     };
     next_directions
-}
-
-#[derive(Clone)]
-pub struct CruciblePath {
-    elapsed_cost: u64,
-    previous_step: CruciblePathStep,
-    end_position: Coord2D<usize>,
-}
-
-impl PartialEq for CruciblePath {
-    fn eq(&self, other: &Self) -> bool {
-        self.estimated_minimum_cost(Self::DISTANCE_COST_FACTOR)
-            == other.estimated_minimum_cost(Self::DISTANCE_COST_FACTOR)
-    }
-}
-
-impl Eq for CruciblePath {}
-
-impl PartialOrd for CruciblePath {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Ord for CruciblePath {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.estimated_minimum_cost(Self::DISTANCE_COST_FACTOR)
-            .cmp(&other.estimated_minimum_cost(Self::DISTANCE_COST_FACTOR))
-    }
-}
-
-impl CruciblePath {
-    const DISTANCE_COST_FACTOR: u64 = 1;
-
-    pub fn new(
-        start_cost: u32,
-        previous_step: CruciblePathStep,
-        end_position: Coord2D<usize>,
-    ) -> Self {
-        CruciblePath {
-            elapsed_cost: u64::from(start_cost),
-            previous_step,
-            end_position,
-        }
-    }
-
-    pub fn add_step(&mut self, step: CruciblePathStep, step_cost: u32) {
-        self.previous_step = step;
-        self.elapsed_cost += u64::from(step_cost);
-    }
-
-    pub fn elapsed_cost(&self) -> u64 {
-        self.elapsed_cost
-    }
-
-    pub fn estimated_minimum_cost(&self, cost_factor: u64) -> u64 {
-        let current_position = &self.previous_step.position;
-        let x_diff: u64 = current_position
-            .get_x()
-            .abs_diff(self.end_position.get_x())
-            .try_into()
-            .unwrap();
-        let y_diff: u64 = current_position
-            .get_y()
-            .abs_diff(self.end_position.get_y())
-            .try_into()
-            .unwrap();
-        self.elapsed_cost + x_diff * cost_factor + y_diff * cost_factor
-    }
-}
-
-#[derive(Clone, Eq, PartialEq, Hash)]
-pub struct CruciblePathStep {
-    position: Coord2D<usize>,
-    direction: Direction,
-    previous_consecutive_steps: usize,
-}
-
-impl CruciblePathStep {
-    pub fn new(
-        position: Coord2D<usize>,
-        direction: Direction,
-        previous_consecutive_steps: usize,
-    ) -> Self {
-        CruciblePathStep {
-            position,
-            direction,
-            previous_consecutive_steps,
-        }
-    }
 }

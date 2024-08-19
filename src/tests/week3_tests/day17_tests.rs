@@ -7,7 +7,7 @@ fn day17_1_test1() {
         102_u64,
         crucible_grid
             .find_minimum_heat_loss_route(1, 3)
-            .elapsed_cost(),
+            .get_elapsed_cost(),
     )
 }
 
@@ -18,7 +18,7 @@ fn day17_1_test2() {
         1256_u64,
         crucible_grid
             .find_minimum_heat_loss_route(1, 3)
-            .elapsed_cost(),
+            .get_elapsed_cost(),
     )
 }
 
@@ -29,7 +29,7 @@ fn day17_2_test1() {
         94_u64,
         crucible_grid
             .find_minimum_heat_loss_route(4, 10)
-            .elapsed_cost(),
+            .get_elapsed_cost(),
     )
 }
 
@@ -40,6 +40,6 @@ fn day17_2_test2() {
         1382_u64,
         crucible_grid
             .find_minimum_heat_loss_route(4, 10)
-            .elapsed_cost(),
+            .get_elapsed_cost(),
     )
 }
