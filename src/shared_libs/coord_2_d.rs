@@ -28,21 +28,25 @@ impl<T: Integer + Copy + CheckedSub + One> Coord2D<T> {
     }
 
     pub fn new_in_direction(&self, direction: &Direction) -> Option<Self> {
+        self.new_in_direction_at_distance(direction, num::one())
+    }
+
+    pub fn new_in_direction_at_distance(&self, direction: &Direction, distance: T) -> Option<Self> {
         match direction {
             Direction::North => Some(Self {
                 x: self.x,
-                y: self.y.checked_sub(&num::one())?,
+                y: self.y.checked_sub(&distance)?,
             }),
             Direction::East => Some(Self {
-                x: self.x.add(num::one()),
+                x: self.x.add(distance),
                 y: self.y,
             }),
             Direction::South => Some(Self {
                 x: self.x,
-                y: self.y.add(num::one()),
+                y: self.y.add(distance),
             }),
             Direction::West => Some(Self {
-                x: self.x.checked_sub(&num::one())?,
+                x: self.x.checked_sub(&distance)?,
                 y: self.y,
             }),
         }
